@@ -2,7 +2,7 @@ package pl.tictactoe.core
 
 import cats.syntax.all._
 
-class BoardSpec extends munit.FunSuite {
+class BoardSpec extends munit.FunSuite:
 
   test("should correctly create board") {
     //when
@@ -159,5 +159,3 @@ class BoardSpec extends munit.FunSuite {
     //then
     assert(clue(result) == Left(BoardError.GameIsOver(Player.X.some)))
   }
-
-}

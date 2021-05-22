@@ -4,10 +4,10 @@ import cats.Show
 import cats.Eq
 
 enum Player:
-  def alternate: Player = this match {
+  def alternate: Player = this match
     case X => O
     case O => X
-  }
+    
   case X
   case O
 

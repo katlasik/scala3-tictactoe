@@ -11,7 +11,7 @@ class TestConsole private(
     
     def printedLines: IO[List[String]] = outputs.get
     override def readLine: IO[String] = 
-        inputs.modify{
+        inputs.modify {
             case x :: xs => (xs, x)
             case Nil => fail("No more input strings for test console!")
         }
@@ -21,7 +21,7 @@ class TestConsole private(
 
 object TestConsole:
 
-    def create(inputs: String*): IO[TestConsole] = for {
+    def create(inputs: String*): IO[TestConsole] = for
         inputs <- Ref.of[IO, List[String]](inputs.toList)
         outputs <- Ref.of[IO, List[String]](Nil)
-    } yield TestConsole(inputs, outputs)
+    yield TestConsole(inputs, outputs)

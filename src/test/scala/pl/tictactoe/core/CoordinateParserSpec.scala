@@ -1,6 +1,6 @@
 package pl.tictactoe.core
 
-class CoordinateParserSpec extends munit.FunSuite {
+class CoordinateParserSpec extends munit.FunSuite:
 
   test("should parse correct coordinates") {
 
@@ -45,7 +45,4 @@ class CoordinateParserSpec extends munit.FunSuite {
     cases.foreach(rawString =>
       assert(clue(CoordinateParser.parse(rawString)) == None)
     )
-
   }
-
-}

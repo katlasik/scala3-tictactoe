@@ -5,7 +5,7 @@ import pl.tictactoe.core.BoardConfig
 import pl.tictactoe.core.Board
 import pl.tictactoe.runtime.Game
 
-class GameSpec extends munit.CatsEffectSuite {
+class GameSpec extends munit.CatsEffectSuite:
 
     val VictoryX = List(
         "A1",
@@ -38,68 +38,66 @@ class GameSpec extends munit.CatsEffectSuite {
 
     test("should prepare board") {
 
-        for {
+        for
             console <- TestConsole.create("4", "3") 
             board <- Game(console).prepareBoard
-        } yield
+        yield
             assert(clue(board.config) == BoardConfig(4, 3))
 
     }
 
     test("should reject invalid input while creating game") {
 
-        for {
+        for
             console <- TestConsole.create("bad", "5", "3") 
             board <- Game(console).prepareBoard
             lines <- console.printedLines
-        } yield
+        yield
             assert(clue(board.config) == BoardConfig(5, 3))
             assert(clue(lines.contains("Invalid value! Please enter value between 3 and 26.")))
     }
 
     test("should allow playing whole game by player X") {
 
-        for {
+        for
             console <- TestConsole.create(VictoryX*) 
             board <- IO.fromEither(Board.create(3, 3))
             _ <- Game(console).loop(board)
             lines <- console.printedLines
-        } yield
+        yield
             assert(clue(lines.contains("\nPlayer X won the game!\n")))
     }
 
      test("should allow playing whole game by player O") {
 
-        for {
+        for
             console <- TestConsole.create(VictoryO*) 
             board <- IO.fromEither(Board.create(3, 3))
             _ <- Game(console).loop(board)
             lines <- console.printedLines
-        } yield
+        yield
             assert(clue(lines.contains("\nPlayer O won the game!\n")))
     }
 
     test("should allow playing whole game with draw") {
 
-        for {
+        for
             console <- TestConsole.create(Draw*) 
             board <- IO.fromEither(Board.create(3, 3))
             _ <- Game(console).loop(board)
             lines <- console.printedLines
-        } yield
+        yield
             assert(clue(lines.contains("\nDraw!\n")))
     }
 
     test("should reject invalid input while playing") {
 
-        for {
+        for
             console <- TestConsole.create("bad" +: Draw*) 
             board <- IO.fromEither(Board.create(3, 3))
             _ <- Game(console).loop(board)
             lines <- console.printedLines
-        } yield
+        yield
             assert(clue(lines.contains("Please enter correct coordinate:")))
     }
-
-
-}
+    

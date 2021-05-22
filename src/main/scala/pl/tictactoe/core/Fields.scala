@@ -8,7 +8,7 @@ opaque type Fields = ArraySeq[ArraySeq[FieldStatus]]
 
 object Fields:
   given Show[Fields] with
-    def show(f: Fields) = {
+    def show(f: Fields) =
       val numbers = LazyList.from(1).take(f.size).map(String.format("%1$2d", _))
       val letters = LazyList.from('A').take(f.size).map(_.toChar.toString)
 
@@ -20,7 +20,6 @@ object Fields:
             case FieldStatus.Taken(Player.O) => "O"
           }.mkString("|")
       }.mkString("\n   " + "- " * f.size + "\n")
-    }
 
   def create(boardSize: Int): Fields = ArraySeq.fill(boardSize)(ArraySeq.fill(boardSize)(FieldStatus.Empty))
 
@@ -29,7 +28,7 @@ object Fields:
 
     def update(c: Coordinate, fieldStatus: FieldStatus): Option[Fields] =
       import c.{x, y}
-      for {
+      for
         line <- f.get(y)
         cell <- line.get(x)
-      } yield f.updated(y, line.updated(x, fieldStatus))
+      yield f.updated(y, line.updated(x, fieldStatus))

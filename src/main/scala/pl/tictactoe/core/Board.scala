@@ -16,12 +16,12 @@ final case class Board(config: BoardConfig, val fields: Fields, status: BoardSta
 
   def move(c: Coordinate, p: Player): Either[BoardError, Board] =
 
-    status match {
+    status match
       case BoardStatus.Won(winner) => BoardError.GameIsOver(winner.some).asLeft
       case BoardStatus.Drawn => BoardError.GameIsOver(none).asLeft
       case BoardStatus.Ongoing(nextPlayer) =>
-        val maybeUpdated = fields(c).map {
-          case FieldStatus.Empty =>
+        fields(c) match
+          case Some(FieldStatus.Empty) =>
             if nextPlayer === p then
               fields.update(c, FieldStatus.Taken(p)).map(
                 updated => 
@@ -30,12 +30,8 @@ final case class Board(config: BoardConfig, val fields: Fields, status: BoardSta
                 )
             else
               BoardError.WrongPlayer(c, p).asLeft
-          case FieldStatus.Taken(_) => BoardError.FieldAlreadyTaken(c, p).asLeft
-        }
-        maybeUpdated.getOrElse(BoardError.CoordinateOutOfBound(c).asLeft)
-    }
-
-
+          case Some(FieldStatus.Taken(_)) => BoardError.FieldAlreadyTaken(c, p).asLeft
+          case None => BoardError.CoordinateOutOfBound(c).asLeft
 
 object Board:
 
@@ -67,21 +63,26 @@ object Board:
         s" Received boardSize: $boardSize, toWin: $toWin.")
     )
 
-  private def checkVictory(board: Board, player: Player, coordinate: Coordinate): Board = {
-    def iterate(translation: Translation, c: Coordinate, n: Int): Int = {
-      translation.translate(c, board.config).flatMap {
-        next => board.fields(next).map{
-          case FieldStatus.Taken(`player`) => iterate(translation, next, n + 1)
-          case _ => n
-        }
-      }.getOrElse(n)
-    }
+  private def checkVictory(board: Board, player: Player, coordinate: Coordinate): Board =
 
+    //Goes in single direction as long as it finds fields taken by player.
+    //If bounds of board or empty or other player's field is found returns score.
+    def iterate(translation: Translation, c: Coordinate, score: Int): Int =
+      translation.translate(c, board.config).flatMap {
+        next => board.fields(next).map {
+          case FieldStatus.Taken(`player`) => iterate(translation, next, score + 1)
+          case _ => score
+        }
+      }.getOrElse(score)
     
     val victory = List(
+      //horizontal
       1 + iterate(Translation.Left, coordinate, 0) + iterate(Translation.Right, coordinate, 0),
+      //from top left to bottom right 
       1 + iterate(Translation.UpLeft, coordinate, 0) + iterate(Translation.DownRight, coordinate, 0),
+      //from bottom left to top right
       1 + iterate(Translation.DownLeft, coordinate, 0) + iterate(Translation.UpRight, coordinate, 0),
+      //vertical
       1 + iterate(Translation.Down, coordinate, 0) + iterate(Translation.Up, coordinate, 0)
     ).exists(_ >= board.config.toWin)
 
@@ -91,7 +92,3 @@ object Board:
       board.copy(status = BoardStatus.Drawn)
     else
       board.copy(status = BoardStatus.Ongoing(player.alternate))
-  }
-
-
-
