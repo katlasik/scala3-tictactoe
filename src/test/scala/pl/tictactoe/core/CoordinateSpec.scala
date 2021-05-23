@@ -1,6 +1,8 @@
 package pl.tictactoe.core
 
-class CoordinateFormatterSpec extends munit.FunSuite:
+import cats.syntax.all._
+
+class CoordinateSpec extends munit.FunSuite:
 
   test("should correctly format coordinates") {
     //given
@@ -13,7 +15,7 @@ class CoordinateFormatterSpec extends munit.FunSuite:
     //then
     cases.foreach {
       case (coordinate, expected) =>
-        assert(clue(CoordinateFormatter.format(coordinate)) == expected)
+        assert(clue(coordinate.show) == expected)
     }
 
   }
