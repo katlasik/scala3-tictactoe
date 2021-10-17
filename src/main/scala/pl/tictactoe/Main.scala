@@ -4,9 +4,8 @@ import cats.effect.IOApp
 import cats.effect.IO
 
 import pl.tictactoe.runtime.LiveConsole
-import pl.tictactoe.runtime.Game
+import pl.tictactoe.runtime.GameRuntime
 
 object Main extends IOApp.Simple:
 
-  val run = Game(LiveConsole).run.foreverM
-  
+  override val run = GameRuntime(LiveConsole).run.foreverM

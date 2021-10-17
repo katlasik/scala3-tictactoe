@@ -1,94 +1,42 @@
 package pl.tictactoe.core
 
-import pl.tictactoe.utils.Globals
 import cats.syntax.all._
+import cats.Show
+import scala.collection.immutable.ArraySeq
 
-case class BoardConfig(size: Int, toWin: Int)
+val BoardSize = 3
 
-final case class Board(config: BoardConfig, val fields: Fields, status: BoardStatus, moves: Int):
-
-  import Board._
-
-  def moveMultiple(moves: (Coordinate, Player)*): Either[BoardError, Board] =
-    moves.foldLeft(this.asRight) {
-      case (board, (coordinate, player)) => board.flatMap(_.move(coordinate, player))
-    }
-
-  def move(c: Coordinate, p: Player): Either[BoardError, Board] =
-
-    status match
-      case BoardStatus.Won(winner) => BoardError.GameIsOver(winner.some).asLeft
-      case BoardStatus.Drawn => BoardError.GameIsOver(none).asLeft
-      case BoardStatus.Ongoing(nextPlayer) =>
-        fields(c) match
-          case Some(FieldStatus.Empty) =>
-            if nextPlayer === p then
-              fields.update(c, FieldStatus.Taken(p)).map(
-                updated => 
-                  checkVictory(copy(fields = updated, moves = moves + 1), p, c))
-                    .toRight(BoardError.CoordinateOutOfBound(c)
-                )
-            else
-              BoardError.WrongPlayer(c, p).asLeft
-          case Some(FieldStatus.Taken(_)) => BoardError.FieldAlreadyTaken(c, p).asLeft
-          case None => BoardError.CoordinateOutOfBound(c).asLeft
+opaque type Board = ArraySeq[ArraySeq[FieldStatus]]
 
 object Board:
+  given Show[Board] with
+    def show(f: Board) =
+      val numbers = LazyList.from(1).take(f.size).map(String.format("%1$2d", _))
+      val letters = LazyList.from('A').take(f.size).map(_.toChar.toString)
 
-  import Globals._
-
-  private enum Translation(x: Int, y: Int):
-
-    def translate(c: Coordinate, config: BoardConfig): Option[Coordinate] =
-      val nx = c.x + x
-      val ny = c.y + y
-
-      Option.when(nx >= 0 && nx < config.size && ny >= 0 && ny < config.size)(Coordinate(nx, ny))
-
-    case Up extends Translation(0, -1)
-    case Down extends Translation(0, 1)
-    case Left extends Translation(-1, 0)
-    case Right extends Translation(1, 0)
-    case UpLeft extends Translation(-1, -1)
-    case DownLeft extends Translation(-1, 1)
-    case UpRight extends Translation(1, -1)
-    case DownRight extends Translation(1, 1)
-
-  def create(boardSize: Int, toWin: Int): Either[BoardError.InvalidConfiguration, Board] =
-    val fields = Fields.create(boardSize)
-    Either.cond(
-      boardSize >= MinBoardSize && boardSize <= MaxBoardSize && boardSize >= toWin && toWin >= MinBoardSize,
-      Board(BoardConfig(boardSize, toWin), fields, BoardStatus.Ongoing(Player.X), 0),
-      BoardError.InvalidConfiguration(s"Fields boardSize must be of size between $MinBoardSize and $MaxBoardSize and toWin must be equal or smaller than boardSize." +
-        s" Received boardSize: $boardSize, toWin: $toWin.")
-    )
-
-  private def checkVictory(board: Board, player: Player, coordinate: Coordinate): Board =
-
-    //Goes in single direction as long as it finds fields taken by player.
-    //If bounds of board or empty or other player's field is found returns score.
-    def iterate(translation: Translation, c: Coordinate, score: Int): Int =
-      translation.translate(c, board.config).flatMap {
-        next => board.fields(next).map {
-          case FieldStatus.Taken(`player`) => iterate(translation, next, score + 1)
-          case _ => score
+      ("   " + letters.mkString(" ") + "\n") + f
+        .zip(numbers)
+        .map { case (line, number) =>
+          (number + " ") + line
+            .map {
+              case FieldStatus.Empty           => " "
+              case FieldStatus.Taken(Player.X) => "X"
+              case FieldStatus.Taken(Player.O) => "O"
+            }
+            .mkString("|")
         }
-      }.getOrElse(score)
-    
-    val victory = List(
-      //horizontal
-      1 + iterate(Translation.Left, coordinate, 0) + iterate(Translation.Right, coordinate, 0),
-      //from top left to bottom right 
-      1 + iterate(Translation.UpLeft, coordinate, 0) + iterate(Translation.DownRight, coordinate, 0),
-      //from bottom left to top right
-      1 + iterate(Translation.DownLeft, coordinate, 0) + iterate(Translation.UpRight, coordinate, 0),
-      //vertical
-      1 + iterate(Translation.Down, coordinate, 0) + iterate(Translation.Up, coordinate, 0)
-    ).exists(_ >= board.config.toWin)
+        .mkString("\n   " + "- " * f.size + "\n")
 
-    if victory then
-      board.copy(status = BoardStatus.Won(player))
-    else if board.moves === (board.config.size * board.config.size) then
-      board.copy(status = BoardStatus.Drawn)
-    else
-      board.copy(status = BoardStatus.Ongoing(player.alternate))
+  def create: Board =
+    ArraySeq.fill(BoardSize)(ArraySeq.fill(BoardSize)(FieldStatus.Empty))
+
+  extension (f: Board)
+    def apply(c: Coordinate): Option[FieldStatus] = for
+      line <- f.get(c.y)
+      cell <- line.get(c.x)
+    yield cell
+
+    def update(c: Coordinate, fieldStatus: FieldStatus): Option[Board] =
+      import c.{x, y}
+      for line <- f.get(y)
+      yield f.updated(y, line.updated(x, fieldStatus))

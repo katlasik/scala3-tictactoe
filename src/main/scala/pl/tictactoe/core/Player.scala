@@ -4,12 +4,12 @@ import cats.Show
 import cats.Eq
 
 enum Player:
-  def alternate: Player = this match
-    case X => O
-    case O => X
-    
   case X
   case O
+
+  def next: Player = this match
+    case X => O
+    case O => X
 
 object Player:
   given Show[Player] = Show.fromToString

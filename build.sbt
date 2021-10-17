@@ -2,7 +2,7 @@ name := "Scala3"
 
 version := "0.1"
 
-scalaVersion := "3.0.2"
+scalaVersion := "3.1.0"
 
 scalacOptions ++= Seq(
   "-indent",
@@ -10,6 +10,6 @@ scalacOptions ++= Seq(
   "-explain"
 )
 
-libraryDependencies += "org.typelevel" %% "cats-effect" % "3.2.9"
-libraryDependencies += "org.typelevel" %% "cats-core" % "2.6.1"
-libraryDependencies += "org.typelevel" %% "munit-cats-effect-3" % "1.0.6" % Test
+libraryDependencies += "org.typelevel" %% "cats-effect" % "3.3.1"
+libraryDependencies += "org.typelevel" %% "cats-core" % "2.7.0"
+libraryDependencies += "org.typelevel" %% "munit-cats-effect-3" % "1.0.7" % Test
